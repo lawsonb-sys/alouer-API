@@ -1,0 +1,116 @@
+import {
+  Body,
+  ConflictException,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UnauthorizedException,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { diskStorage } from 'multer';
+import { User } from './entities/user.entity';
+import { UsersService } from './users.service';
+@ApiTags('users')
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Post('post')
+  @ApiOperation({ summary: 'Créer un utilisateur' })
+  @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès' })
+  @UseInterceptors(
+    FileInterceptor('profile', {
+      storage: diskStorage({
+        destination: './uploads/profile',
+        filename: (_req, file, cb) => {
+          const filename = `${Date.now()}-${file.originalname}`;
+          cb(null, filename);
+        },
+      }),
+    }),
+  )
+  create(@Body() user: User, @UploadedFile() profile: Express.Multer.File) {
+    try {
+      return this.usersService.create(user, profile);
+    } catch (error) {
+      throw new ConflictException(error.message);
+    }
+  }
+
+  @Get('get')
+  @ApiOperation({ summary: 'Recuperer tous les utilisateurs' })
+  @ApiResponse({
+    status: 201,
+    description: 'Tous les utilisateurs recuperer avec succes',
+  })
+  findAll() {
+    return this.usersService.findAll();
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Recuperer un utilisateur' })
+  @ApiResponse({
+    status: 201,
+    description: 'Utilisateur recuperer avec succes',
+  })
+  findOne(@Param('id') id: string) {
+    return this.usersService.findOne(+id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Modifier un utilisateur' })
+  @ApiResponse({ status: 201, description: 'Utilisateur modifier avec succes' })
+  @UseInterceptors(
+    FileInterceptor('profile', {
+      storage: diskStorage({
+        destination: './uploads/profile',
+        filename: (_req, file, cb) => {
+          const filename = `${Date.now()}-${file.originalname}`;
+          cb(null, filename);
+        },
+      }),
+    }),
+  )
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: User,
+    @UploadedFile() profile: Express.Multer.File,
+  ) {
+    return this.usersService.update(+id, updateUserDto, profile);
+  }
+
+  @Delete('delet/:id')
+  @ApiOperation({ summary: 'Supprimer un utilisateur' })
+  @ApiResponse({
+    status: 201,
+    description: 'Utilisateur supprimer avec succes',
+  })
+  remove(@Param('id') id: string) {
+    const del = this.usersService.remove(+id);
+    return `Utilisateur  ${id}  suprimer surprimer avec succes}}`;
+  }
+
+  @Post('login')
+  @ApiOperation({ summary: 'Connexion d un utilisateur' })
+  @ApiResponse({
+    status: 201,
+    description: 'Utilisateur connecter avec succes',
+  })
+  async login(
+    @Body() loginDto: { nom: string; password: string },
+  ): Promise<User> {
+    try {
+      return await this.usersService.login(loginDto.nom, loginDto.password);
+    } catch (error) {
+      throw new UnauthorizedException(
+        'Echec de la connexion,verifier le nom ou le mot de passe)',
+      );
+    }
+  }
+}
