@@ -1,0 +1,38 @@
+services:
+  api:
+    build: .
+    ports:
+      - '3002:3002'
+    environment:
+      - NODE_ENV=production
+      - UPLOAD_DIR=/app/uploads
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - DB_DATABASE=alouer
+    volumes:
+      - uploads_volume:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    user: '1000:1000'
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=alouer
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  mysql_data:
+  uploads_volume:

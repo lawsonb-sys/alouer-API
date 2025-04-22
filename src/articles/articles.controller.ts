@@ -10,11 +10,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { createStorage } from 'src/storage';
 import { ArticlesService } from './articles.service';
 import { Article } from './entities/article.entity';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 @ApiTags('articles')
 @Controller('articles')
 export class ArticlesController {
@@ -25,15 +25,7 @@ export class ArticlesController {
   @ApiResponse({ status: 201, description: 'Article créé avec succès' })
   @UseInterceptors(
     FilesInterceptor('images', 10, {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now();
-          const ext = extname(file.originalname);
-          const filename = `${Date.now()}-${file.originalname}`;
-          cb(null, filename);
-        },
-      }),
+      storage: createStorage('articles', 'articles'),
     }),
   )
   create(
@@ -42,7 +34,6 @@ export class ArticlesController {
 
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<Article> {
-    console.log('userId controller:', articlesData);
     return this.articlesService.create(articlesData, userId, files);
   }
 
@@ -65,8 +56,16 @@ export class ArticlesController {
   @Get('get/user/:id')
   @ApiOperation({ summary: 'Recuperer tous les articles d un utilisateur' })
   findByUuserId(@Param('id') id: number): Promise<Article[]> {
-    console.log('userId:', id);
     return this.articlesService.findAllByUserId(id);
+  }
+  @Get('ville/:ville')
+  @ApiOperation({ summary: 'Recuperer tous les articles d une ville' })
+  @ApiResponse({
+    status: 201,
+    description: 'Tous les articles recuperer avec succes',
+  })
+  findByVille(@Param('ville') ville: string): Promise<Article[]> {
+    return this.articlesService.findAllByVille(ville);
   }
 
   @Patch('update/:id')
@@ -77,8 +76,6 @@ export class ArticlesController {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now();
-          const ext = extname(file.originalname);
           const filename = `${Date.now()}-${file.originalname}`;
           cb(null, filename);
         },

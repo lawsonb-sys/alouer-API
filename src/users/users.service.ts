@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { unlink } from 'fs';
+import { promises as fsPromises } from 'fs';
 import { join } from 'path';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -64,13 +64,9 @@ export class UsersService {
       const filnam = user.profile.split('/').pop()!;
       const oldpath = join(process.cwd(), 'uploads/profile', filnam);
       try {
-        await unlink(oldpath, (err) => console.log(err));
-        console.log('ancienne image supprimée', oldpath);
+        await fsPromises.unlink(oldpath);
       } catch (error) {
-        console.error(
-          "Erreur lors de la suppression de l'ancienne image:",
-          error,
-        );
+        throw new Error('Erreur lors de la suppression du fichier ');
       }
     }
     user.profile = `http://localhost:3002/uploads/profile/${file.filename}`;
@@ -84,6 +80,7 @@ export class UsersService {
   }
 
   async login(nom: string, password: string): Promise<User> {
+    console.log('logins', { nom, password });
     const user = await this.userRepository.findOne({ where: { nom } });
     if (!user) {
       throw new Error("Cet utilisateur n'existe pas");

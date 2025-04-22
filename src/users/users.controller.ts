@@ -14,6 +14,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
+import { createStorage } from 'src/storage';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 @ApiTags('users')
@@ -26,19 +27,14 @@ export class UsersController {
   @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès' })
   @UseInterceptors(
     FileInterceptor('profile', {
-      storage: diskStorage({
-        destination: './uploads/profile',
-        filename: (_req, file, cb) => {
-          const filename = `${Date.now()}-${file.originalname}`;
-          cb(null, filename);
-        },
-      }),
+      storage: createStorage('profile', 'profile'),
     }),
   )
   create(@Body() user: User, @UploadedFile() profile: Express.Multer.File) {
     try {
       return this.usersService.create(user, profile);
     } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       throw new ConflictException(error.message);
     }
   }
@@ -78,7 +74,7 @@ export class UsersController {
     }),
   )
   update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateUserDto: User,
     @UploadedFile() profile: Express.Multer.File,
   ) {
@@ -91,8 +87,8 @@ export class UsersController {
     status: 201,
     description: 'Utilisateur supprimer avec succes',
   })
-  remove(@Param('id') id: string) {
-    const del = this.usersService.remove(+id);
+  async remove(@Param('id') id: string) {
+    await this.usersService.remove(+id);
     return `Utilisateur  ${id}  suprimer surprimer avec succes}}`;
   }
 
@@ -102,14 +98,13 @@ export class UsersController {
     status: 201,
     description: 'Utilisateur connecter avec succes',
   })
-  async login(
-    @Body() loginDto: { nom: string; password: string },
-  ): Promise<User> {
+  async login(@Body() loginDto: User): Promise<User> {
+    console.log('login', loginDto);
     try {
       return await this.usersService.login(loginDto.nom, loginDto.password);
-    } catch (error) {
+    } catch (e) {
       throw new UnauthorizedException(
-        'Echec de la connexion,verifier le nom ou le mot de passe)',
+        `Echec de la connexion,verifier le nom ou le mot de passe ,${e}`,
       );
     }
   }

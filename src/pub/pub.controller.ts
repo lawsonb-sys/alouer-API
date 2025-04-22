@@ -1,18 +1,38 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { PubService } from './pub.service';
-import { CreatePubDto } from './dto/create-pub.dto';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { createStorage } from 'src/storage';
 import { UpdatePubDto } from './dto/update-pub.dto';
+import { Pub } from './entities/pub.entity';
+import { PubService } from './pub.service';
 
 @Controller('pub')
 export class PubController {
   constructor(private readonly pubService: PubService) {}
 
-  @Post()
-  create(@Body() createPubDto: CreatePubDto) {
-    return this.pubService.create(createPubDto);
+  @Post('post')
+  @UseInterceptors(
+    FilesInterceptor('photos', 10, {
+      storage: createStorage('pub', 'pub'),
+    }),
+  )
+  create(
+    @Body() createPubDto: Pub,
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<Pub> {
+    return this.pubService.create(createPubDto, files);
   }
 
-  @Get()
+  @Get('get')
   findAll() {
     return this.pubService.findAll();
   }

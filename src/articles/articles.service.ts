@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { existsSync, unlink } from 'fs';
+import { existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm/repository/Repository';
@@ -37,17 +37,19 @@ export class ArticlesService {
 
     article.images = imagesUrls.map((file) => {
       const image = new Image();
+      console.log('env:', process.env.DB_PORT);
       image.url = `${process.env.BASE_URL || 'http://localhost:3002'}/uploads/${file.filename}`;
-      console.log('voici l image):', image.url);
+
       return image;
     });
     try {
       const savedArticle = await this.articleRepository.save(article);
-      console.log('Article créé avec succès :', savedArticle.id); // Log pour le débogage
+
       return savedArticle;
     } catch (error) {
-      console.error("Erreur lors de la sauvegarde de l'article :", error);
-      throw new InternalServerErrorException('Failed to save the article');
+      throw new InternalServerErrorException(
+        'Failed to save the article,' + error,
+      );
     }
   }
 
@@ -90,6 +92,24 @@ export class ArticlesService {
 
     return articles;
   }
+  async findAllByVille(ville: string): Promise<Article[]> {
+    if (!ville) {
+      throw new NotFoundException('Ville is required');
+    }
+
+    const articles = await this.articleRepository.find({
+      where: {
+        ville: ville, // Recherche par le nom de la ville (string)
+      },
+      relations: ['author', 'images'], // Charge les relations author et images
+    });
+
+    if (articles.length === 0) {
+      throw new NotFoundException(`No articles found for city: ${ville}`);
+    }
+
+    return articles;
+  }
   async update(
     id: number,
     updateArticleDto: UpdateArticleDto,
@@ -119,10 +139,9 @@ export class ArticlesService {
     // Sauvegarder l'article mis à jour
     try {
       const savedArticle = await this.articleRepository.save(updatedArticle);
-      console.log('Article mis à jour avec succès :', savedArticle.id);
+
       return savedArticle;
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de l'article :", error);
       throw new InternalServerErrorException('Failed to update the article');
     }
   }
@@ -152,24 +171,13 @@ export class ArticlesService {
             );
           }
           const filePath = join(process.cwd(), 'uploads', filnam);
-          console.log('Chemin du fichier :', filePath);
 
           if (existsSync(filePath)) {
             try {
-              await unlink(filePath, (error) => {
-                if (error) {
-                  console.error(
-                    `Erreur lors de la suppression de l'image ${image.url}:`,
-                    error,
-                  );
-                } else {
-                  console.log(`Image ${image.url} supprimée avec succès.`);
-                }
-              });
-              console.log(`Image ${image.url} supprimée avec succès.`);
+              unlinkSync(filePath);
             } catch (error) {
               console.error(
-                `Erreur lors de la suppression de l'image ${image.url}:`,
+                `Erreur lors de la suppression de l'image ${error}:`,
               );
             }
           } else {
@@ -183,7 +191,6 @@ export class ArticlesService {
       await query.manager.remove(article);
       await query.commitTransaction();
       return `L'article avec l'ID ${id} a été supprimé avec succès.`;
-      console.log(`Article avec l'ID ${id} supprimé avec succès.`);
     } catch (error) {
       await query.rollbackTransaction();
       throw error;
