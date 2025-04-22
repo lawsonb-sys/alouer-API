@@ -3,3 +3,4 @@ test
 .gitignore
 dist
 .git
+.env

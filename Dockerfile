@@ -26,7 +26,7 @@ RUN apk add --no-cache openssl
 
 COPY --from=builder --chown=node:node /app/node_modules ./node_modules
 COPY --from=builder --chown=node:node /app/dist ./dist
-COPY --chown=node:node .env ./
+#COPY --chown=node:node .env ./
 
 # Définit l'utilisateur non-root
 USER node
