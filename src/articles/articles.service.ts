@@ -38,7 +38,7 @@ export class ArticlesService {
     article.images = imagesUrls.map((file) => {
       const image = new Image();
       console.log('env:', process.env.DB_PORT);
-      image.url = `${process.env.BASE_URL || 'http://localhost:3002'}/uploads/${file.filename}`;
+      image.url = `${process.env.BASE_URL}/uploads/${file.filename}`;
 
       return image;
     });
