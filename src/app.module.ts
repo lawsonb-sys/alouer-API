@@ -23,19 +23,22 @@ import { UsersModule } from './users/users.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        console.log('DB_HOST:', configService.get('DB_HOST'));
-        console.log('DB_PORT:', configService.get('DB_PORT'));
-        console.log('DB_USERNAME:', configService.get('DB_USERNAME'));
-        console.log('DB_PASSWORD:', configService.get('DB_PASSWORD'));
-        console.log('DB_DATABASE:', configService.get('DB_DATABASE'));
         return {
           type: 'mysql',
+          connectorPackage: 'mysql2',
           host: configService.get('DB_HOST'),
           port: configService.get('DB_PORT'),
           username: configService.get('DB_USERNAME'),
           password: configService.get('DB_PASSWORD'),
           database: configService.get('DB_DATABASE'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          ssl: {
+            rejectUnauthorized: false,
+          },
+          extr: {
+            connectTimeout: 60000,
+            socketPath: null,
+          },
           synchronize: true,
           extra: {
             authPlugin: 'mysql_native_password',
