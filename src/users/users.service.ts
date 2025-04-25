@@ -22,7 +22,7 @@ export class UsersService {
     }
 
     if (profile) {
-      user.profile = `http://localhost:3002/uploads/profile/${profile.filename}`;
+      user.profile = `${process.env.BASE_URL}/uploads/profile/${profile.filename}`;
       // Log après vérification
     } else {
       console.log('users: profile is undefined'); // Log si profile est undefined
@@ -69,7 +69,7 @@ export class UsersService {
         throw new Error('Erreur lors de la suppression du fichier ');
       }
     }
-    user.profile = `http://localhost:3002/uploads/profile/${file.filename}`;
+    user.profile = `${process.env.BASE_URL}/uploads/profile/${file.filename}`;
     Object.assign(user, updateUser);
 
     return this.userRepository.save(user);

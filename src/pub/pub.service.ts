@@ -20,7 +20,7 @@ export class PubService {
     const pub = this.pubRepository.create(createPub);
     pub.photos = photos.map((file) => {
       const photo = new Photo();
-      photo.url = `${process.env.BASE_URL || 'http://localhost:3002'}/uploads/pub/${file.filename}`;
+      photo.url = `${process.env.BASE_URL}/uploads/pub/${file.filename}`;
       return photo;
     });
     try {
@@ -73,8 +73,6 @@ export class PubService {
           if (existsSync(filePath)) {
             try {
               unlinkSync(filePath);
-              console.log(`Image ${photo.url} supprimée avec succès.`);
-              console.log(`Image ${photo.url} supprimée avec succès.`);
             } catch (error) {
               console.error(
                 `Erreur lors de la suppression de l'image ${error}:`,
