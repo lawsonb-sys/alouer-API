@@ -28,6 +28,7 @@ export class UsersService {
       console.log('users: profile is undefined'); // Log si profile est undefined
     }
     user.password = await PasswordUtils.hashPassword(user.password);
+
     return this.userRepository.save(user);
   }
 
