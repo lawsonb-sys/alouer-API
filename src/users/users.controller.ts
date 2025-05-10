@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
 import { createStorage } from 'src/storage';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
@@ -64,13 +63,7 @@ export class UsersController {
   @ApiResponse({ status: 201, description: 'Utilisateur modifier avec succes' })
   @UseInterceptors(
     FileInterceptor('profile', {
-      storage: diskStorage({
-        destination: './uploads/profile',
-        filename: (_req, file, cb) => {
-          const filename = `${Date.now()}-${file.originalname}`;
-          cb(null, filename);
-        },
-      }),
+      storage: createStorage('profile', 'profile'),
     }),
   )
   update(

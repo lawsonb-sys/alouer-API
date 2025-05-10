@@ -39,7 +39,7 @@ import { UsersModule } from './users/users.module';
             connectTimeout: 60000,
             socketPath: null,
           },
-          synchronize: true,
+          synchronize: false,
           extra: {
             authPlugin: 'mysql_native_password',
           },
