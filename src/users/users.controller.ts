@@ -58,7 +58,7 @@ export class UsersController {
     return this.usersService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Patch('update/:id')
   @ApiOperation({ summary: 'Modifier un utilisateur' })
   @ApiResponse({ status: 201, description: 'Utilisateur modifier avec succes' })
   @UseInterceptors(
