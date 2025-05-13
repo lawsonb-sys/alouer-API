@@ -7,9 +7,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useStaticAssets(join(__dirname, '..', './uploads'), {});
-  app.useStaticAssets(join(__dirname, '..', './uploads/profile'), {});
-
-  console.log(join(__dirname, '..', '/uploads/profile'));
+  //app.useStaticAssets(join(__dirname, '..', './uploads/profile'), {});
 
   const config = new DocumentBuilder()
     .setTitle('My API')
