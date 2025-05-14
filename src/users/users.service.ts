@@ -64,7 +64,6 @@ export class UsersService {
     }
 
     if (file) {
-      console.log('File object during update:', file);
       if (user.profile) {
         const filnam = user.profile.split('/').pop()!;
         const oldpath = join(process.cwd(), 'uploads/profile', filnam);
@@ -76,15 +75,12 @@ export class UsersService {
               `L'ancien fichier de profil "${oldpath}" n'a pas été trouvé et ne pouvait pas être supprimé. Ceci n'empêche pas la mise à jour.`,
             );
           } else {
-            console.error('Erreur lors de la suppression du fichier:', error);
             throw new Error('Erreur lors de la suppression du fichier ');
           }
         }
       }
-      console.log('ServeStatic rootPath:', join(__dirname, '..', 'uploads'));
 
       user.profile = `${process.env.BASE_URL}/uploads/profile/${file.filename}`;
-      console.log('voici le path ', user.profile);
     }
 
     Object.assign(user, updateUser);
