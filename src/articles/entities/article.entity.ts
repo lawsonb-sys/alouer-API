@@ -15,6 +15,8 @@ export class Article {
   @ManyToOne(() => User, (user) => user.articles)
   author: User;
   @Column()
+  ville: string;
+  @Column()
   quartier: string;
 
   @Column()

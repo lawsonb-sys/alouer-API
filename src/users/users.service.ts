@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { unlink } from 'fs';
+import { promises as fsPromises } from 'fs';
 import { join } from 'path';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -22,12 +22,14 @@ export class UsersService {
     }
 
     if (profile) {
-      user.profile = `http://localhost:3002/uploads/profile/${profile.filename}`;
+      user.profile = `${process.env.BASE_URL}/uploads/profile/${profile.filename}`;
+      // Log du path
       // Log après vérification
     } else {
       console.log('users: profile is undefined'); // Log si profile est undefined
     }
     user.password = await PasswordUtils.hashPassword(user.password);
+
     return this.userRepository.save(user);
   }
 
@@ -60,20 +62,27 @@ export class UsersService {
         updateUser.password,
       );
     }
-    if (file && user.profile) {
-      const filnam = user.profile.split('/').pop()!;
-      const oldpath = join(process.cwd(), 'uploads/profile', filnam);
-      try {
-        await unlink(oldpath, (err) => console.log(err));
-        console.log('ancienne image supprimée', oldpath);
-      } catch (error) {
-        console.error(
-          "Erreur lors de la suppression de l'ancienne image:",
-          error,
-        );
+
+    if (file) {
+      if (user.profile) {
+        const filnam = user.profile.split('/').pop()!;
+        const oldpath = join(process.cwd(), 'uploads/profile', filnam);
+        try {
+          await fsPromises.unlink(oldpath);
+        } catch (error: any) {
+          if (error.code === 'ENOENT') {
+            console.warn(
+              `L'ancien fichier de profil "${oldpath}" n'a pas été trouvé et ne pouvait pas être supprimé. Ceci n'empêche pas la mise à jour.`,
+            );
+          } else {
+            throw new Error('Erreur lors de la suppression du fichier ');
+          }
+        }
       }
+
+      user.profile = `${process.env.BASE_URL}/uploads/profile/${file.filename}`;
     }
-    user.profile = `http://localhost:3002/uploads/profile/${file.filename}`;
+
     Object.assign(user, updateUser);
 
     return this.userRepository.save(user);
@@ -84,6 +93,7 @@ export class UsersService {
   }
 
   async login(nom: string, password: string): Promise<User> {
+    console.log('logins', { nom, password });
     const user = await this.userRepository.findOne({ where: { nom } });
     if (!user) {
       throw new Error("Cet utilisateur n'existe pas");

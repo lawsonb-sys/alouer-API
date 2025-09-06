@@ -1,11 +1,5 @@
 import { Article } from 'src/articles/entities/article.entity';
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
@@ -14,12 +8,16 @@ export class User {
 
   @Column()
   nom: string;
-
   @Column()
   prenom: string;
 
   @Column()
+  email: string;
+
+  @Column()
   password: string;
+  @Column()
+  phone: number;
 
   @Column({ nullable: true })
   profile: string;
